@@ -24,7 +24,7 @@
 #define port 9090
 #define serverIp "127.0.0.1"
 #define fileName "100mb.txt"
-#define 100MEGA_BYTE 104857600 //  Allocate 100 MB memory block 
+#define MEGA_BYTE100 104857600 //  Allocate 100 MB memory block 
 
 int sendingPacketWithoutSpoofing(int socket ,FILE* myfile, char* buffer);
 int setTCPOpt(int socket , char * buffer);
@@ -38,12 +38,12 @@ int* GenerateMemoryBlock()
     // intializes random number generator
     srand((unsigned) time(&t));
 
-   int* pBytes = malloc(sizeof(int) * 100MEGA_BYTE);
+   int* pBytes = malloc(sizeof(int) * MEGA_BYTE100);
    if (!pBytes){
      perror("Set failed:\n");
    }
 
-   for( int Index = 0; Index < 100MEGA_BYTE; ++Index )
+   for( int Index = 0; Index < MEGA_BYTE100; ++Index )
    {
       pBytes[ Index ] = ( int ) rand();
    }
