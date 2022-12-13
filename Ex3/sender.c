@@ -9,8 +9,7 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <time.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <time.h>
 // gist: In this class we want to send the data we have in a txt file. The process is:
 // Step 1: creat and set a socket
 // Step 2: Connect to the server.
@@ -24,13 +23,15 @@
 #define port 9090
 #define serverIp "127.0.0.1"
 #define fileName "100mb.txt"
-#define MEGA_BYTE100 104857600 //  Allocate 100 MB memory block 
+#define mb100 104857600 //Allocate 100 MB memory block 
 
-int sendingPacketWithoutSpoofing(int socket ,FILE* myfile, char* buffer);
+int sendingPacket(int socket ,FILE* myfile, char* buffer);
 int setTCPOpt(int socket , char * buffer);
 int createSocket();
 int createfile();
-
+int* GenerateMemoryBlock();
+void create100MBBinaryFile(FILE* myfile);
+int sender_checksum(int b[mb100],int s);
 
 int* GenerateMemoryBlock()
 {
@@ -38,25 +39,30 @@ int* GenerateMemoryBlock()
     // intializes random number generator
     srand((unsigned) time(&t));
 
-   int* pBytes = malloc(sizeof(int) * MEGA_BYTE100);
+   int* pBytes = malloc(sizeof(int) * mb100);
    if (!pBytes){
-     perror("Set failed:\n");
+     perror("malloc failed\n");
    }
 
-   for( int Index = 0; Index < MEGA_BYTE100; ++Index )
+    // Write 100 MB data 1000 times.
+   for( int Index = 0; Index < mb100; ++Index )
    {
-      pBytes[ Index ] = ( int ) rand();
+      pBytes[ Index ] = (int) rand();
    }
 
    return pBytes;
 }
 
-void create100MBBinaryFile()
+void create100MBBinaryFile(FILE* fp)
 {
-    // open file.
-    FILE * myfile = fopen(fileName, "rb");
+    clock_t start_time, end_time;
 
-    if(myfile == NULL) {
+    start_time = clock();
+
+    // open file.
+    fp = fopen(fileName, "rb");
+
+    if(fp == NULL) {
         perror("fopen faild!\n");
         return -1;
     }
@@ -64,16 +70,33 @@ void create100MBBinaryFile()
    // Get data.
    int* pData = GenerateMemoryBlock();
 
-   // Write 100 MB data 1000 times.
-   for( int Index = 0; Index < 1000; ++Index )
-   {fprintf(myfile,)
+   // write to file 
+    size_t write_file =fwrite(pData , sizeof(int) ,mb100 , fp);
+    if (write_file != mb100)
+    {
+        perror("fwrite faild!\n");
+        return -1;
+    }
+    free(pData);
 
-      myfile.write( (const int*)pData, MEGA_BYTE );
-   }
-
-   free(pData);
-
+    end_time = clock();
+    // get the time takenin seconds
+    double duration = ((double) end_time - start_time)/CLOCKS_PER_SEC;
+    printf("Time taken in second : %f", duration);
 }
+
+int sender_checksum(int b[mb100],int s) // b ias the element of the array , s is the size of the array
+{
+    int checksum,sum=0;
+    for (int i ; i<s; i++)
+    {
+        sum+=b[i];
+    }
+    checksum=~sum;
+    printf("Sender checksum is:%d",checksum);
+    return checksum;
+}
+
 int createSocket(){
     // returns zero if the creation was secssesuful and -1 if not.
     int sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -102,9 +125,8 @@ int setTCPOpt(int socket , char * buffer){
 }
 
 
-int sendingPacketWithoutSpoofing(int socket ,FILE* myfile, char* buffer){
+int sendingPacket(int socket ,FILE* myfile, char* buffer){
     
-    // This part taken from the tirgul slideshow("Packet Sniffing and Spoofing", page 16).
     struct sockaddr_in dest_info;
     // memset(&dest_info, 0, sizeof(dest_info));
     bzero(&dest_info, sizeof(dest_info));
@@ -156,17 +178,16 @@ int sendingPacketWithoutSpoofing(int socket ,FILE* myfile, char* buffer){
 }
 
 int main(int argc, char const *argv[]){
-
-    int numOfSends = 7;
-    int currentSended = 0;
     FILE *file_Name;
-    while (currentSended < numOfSends){
-        char buffer[size] ={0};
-        int socket = createSocket();
-        int send = sendingPacketWithoutSpoofing(socket,file_Name,buffer,0);
-        close(socket);
-        currentSended += 1;
-    }
+    create100MBBinaryFile(file_Name);
+    char buffer[mb100] ={0};
+    
+    int socket = createSocket();
+    int send = sendingPacket(socket,file_Name,buffer);
+    close(socket);
+    fclose(file_Name);
+    
+    
 
     return 0;
 }
