@@ -18,12 +18,25 @@
 #define Size 1024
 #define port 9090
 #define fileSize 1048576
+#define mb100 104857600 //Allocate 100 MB memory block 
 
 int reciveTheData(int serverSocket, char* buffer,struct sockaddr_in INFO, int flag);
 int gettingTheData(int serverSocket, char* buffer,struct sockaddr_in serverInfo );
 int setSockOpt(int socket , char * buffer);
 int createSocket();
 
+int recevier(int c[mb100],int s, int scheck)
+{
+    int checksum,sum=0;
+    for (int i ; i<s; i++)
+    {
+        sum+=c[i];
+    }
+    sum=sum+scheck;
+    checksum=~sum;
+    printf("Reciver checksum is:%d",checksum);
+    return checksum;
+}
 
 int createSocket(){
     // Create a socket lisener.
@@ -42,7 +55,7 @@ int setSockOpt(int socket , char * buffer){
     // Taken from the instruction to the assigment 
     // Specify the wanted socket option name.
     
-    strcpy(buffer, "reno");
+    //strcpy(buffer, "reno"); if will be problem its here
     socklen_t length = sizeof(buffer);
     int socketOpt = setsockopt(socket, IPPROTO_TCP, TCP_CONGESTION, buffer, length);
     if (socketOpt != 0) {
@@ -74,21 +87,13 @@ int gettingTheData(int serverSocket, char* buffer,struct sockaddr_in serverInfo 
     }
     printf("Bind was sucssesful!\n");
 
-// Define the max queue size to 5 and print an eror if something went wrong
-    int listening = listen(serverSocket, 5);
-    if (listening < 0) {
-        printf("Listen failed!\n");
-        close(serverSocket);
-        return -1;
-    }
-    printf("Listen sucsseded!\n");
     reciveTheData(serverSocket, buffer,serverInfo,0);
 
     return 0;
 }
 
 int reciveTheData(int serverSocket, char* buffer,struct sockaddr_in INFO, int flag){
-    char buf[256];
+    char buf[1024];
     socklen_t length = sizeof(buf);
     if (getsockopt(serverSocket, IPPROTO_TCP, TCP_CONGESTION, buf, &length) != 0) { 
         perror("getsockopt");
