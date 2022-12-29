@@ -5,7 +5,12 @@ FLAGS = -Wall -g
 .PHONY: clean all run
 
 all: mutex fncl cond pipe
-run: mutex fncl cond pipe ./mutex ./fctnl ./cond ./pipe
+
+run:	
+	./mutex 
+	./fctnl 
+	./cond 
+	./pipe
 	
 mutex: mymutex.c
 	$(CC) -pthread -o mutex mymutex.c

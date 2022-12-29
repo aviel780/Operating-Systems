@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
                                                         }
 
     clock_gettime(CLOCK_MONOTONIC, &finish);  // End timer
-      printf( " the total time is take cond is: %f\n", ((double) (finish.tv_sec - start.tv_sec) + (double)(finish.tv_nsec - start.tv_nsec))/1000000000 );
+      printf( " the total time is take pipe or socket is: %f\n", ((double) (finish.tv_sec - start.tv_sec) + (double)(finish.tv_nsec - start.tv_nsec))/1000000000 );
 
 
     close(pipefd[1]);  // Close write end of pipe
